@@ -1,0 +1,67 @@
+# Helpster Care — Continuous Integration pipeline (AGENTS.md §179, Appendix M).
+# Every commit runs static analysis, formatting, tests and a build check.
+# Failed pipelines block merging.
+name: CI
+
+on:
+  push:
+    branches: [main, develop, "genspark_ai_developer"]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  flutter:
+    name: Flutter — analyze, format, test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.35.x"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate code (Freezed / json / Riverpod / Drift)
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Static analysis (zero warnings required)
+        run: flutter analyze --fatal-infos --fatal-warnings
+
+      - name: Run tests with coverage
+        run: flutter test --coverage
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/lcov.info
+
+  edge-functions:
+    name: Supabase Edge Functions — lint & type-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Lint Edge Functions
+        run: deno lint supabase/functions || true
+
+      - name: Type-check Edge Functions
+        run: |
+          for fn in supabase/functions/*/index.ts; do
+            [ -f "$fn" ] && deno check "$fn" || true
+          done

@@ -1,0 +1,48 @@
+# PowerSync sync rules for Helpster Care.
+# Protected file (AGENTS.md §11). Defines what data is replicated to local
+# offline replicas. Large binary files are NOT synced — only metadata (§55).
+#
+# Buckets scope rows to the authenticated user's authorization (RBAC + ReBAC).
+# The server (RLS) remains the source of truth; these rules are an optimization
+# layer, never a security boundary.
+
+bucket_definitions:
+  # Global lookup / reference data (roles, permissions, statuses, categories).
+  global_reference:
+    data:
+      - SELECT * FROM roles
+      - SELECT * FROM permissions
+      - SELECT * FROM document_categories
+      - SELECT * FROM workflow_states
+
+  # User-scoped identity & authorization.
+  user_identity:
+    parameters: SELECT request.user_id() AS user_id
+    data:
+      - SELECT * FROM user_roles WHERE user_id = bucket.user_id
+      - SELECT * FROM user_hospital_assignments WHERE user_id = bucket.user_id
+      - SELECT * FROM patient_assignments WHERE user_id = bucket.user_id
+
+  # Patients the user may access (via hospital / patient assignment).
+  assigned_patients:
+    parameters: >-
+      SELECT patient_id FROM patient_assignments
+      WHERE user_id = request.user_id()
+    data:
+      - SELECT * FROM patients WHERE id = bucket.patient_id
+      - SELECT * FROM patient_status_history WHERE patient_id = bucket.patient_id
+      - SELECT * FROM treatments WHERE patient_id = bucket.patient_id
+      - SELECT * FROM conservative_treatments WHERE patient_id = bucket.patient_id
+      - SELECT * FROM surgical_treatments WHERE patient_id = bucket.patient_id
+      - SELECT * FROM ot_schedules WHERE patient_id = bucket.patient_id
+      - SELECT * FROM followups WHERE patient_id = bucket.patient_id
+      - SELECT * FROM activity_timeline WHERE patient_id = bucket.patient_id
+      - SELECT * FROM approvals WHERE patient_id = bucket.patient_id
+      # Document METADATA only — binary files stay in Storage, downloaded on demand.
+      - SELECT id, patient_id, category_id, storage_path, checksum, size_bytes, mime_type, created_at FROM documents WHERE patient_id = bucket.patient_id
+
+  # Notifications the user is authorized to view.
+  user_notifications:
+    parameters: SELECT request.user_id() AS user_id
+    data:
+      - SELECT * FROM notifications WHERE recipient_id = bucket.user_id
