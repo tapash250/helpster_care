@@ -1,0 +1,41 @@
+# CODEOWNERS — Helpster Care
+#
+# These owners are automatically requested for review when someone opens a pull
+# request that modifies matching files. See AGENTS.md §208 (Repository Governance)
+# and §11 (Protected Files).
+#
+# Order matters: the LAST matching pattern takes precedence.
+
+# Default owner for everything in the repository.
+*                           @Tapash-0029
+
+# ---------------------------------------------------------------------------
+# Protected files (AGENTS.md §11) — require explicit architectural justification.
+# ---------------------------------------------------------------------------
+/AGENTS.md                  @Tapash-0029
+/README.md                  @Tapash-0029
+/pubspec.yaml               @Tapash-0029
+/analysis_options.yaml      @Tapash-0029
+/CODEOWNERS                 @Tapash-0029
+
+# ---------------------------------------------------------------------------
+# Backend / database / security — highest scrutiny.
+# ---------------------------------------------------------------------------
+/supabase/                  @Tapash-0029
+/supabase/migrations/       @Tapash-0029
+/supabase/policies/         @Tapash-0029
+/supabase/functions/        @Tapash-0029
+/docs/database/             @Tapash-0029
+/docs/permissions/          @Tapash-0029
+
+# ---------------------------------------------------------------------------
+# Architecture & app-level configuration.
+# ---------------------------------------------------------------------------
+/lib/app/                   @Tapash-0029
+/lib/core/                  @Tapash-0029
+/docs/architecture/         @Tapash-0029
+
+# ---------------------------------------------------------------------------
+# CI / CD.
+# ---------------------------------------------------------------------------
+/.github/                   @Tapash-0029

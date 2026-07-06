@@ -1,0 +1,7 @@
+{
+  "@@locale": "en",
+  "appTitle": "Helpster Care",
+  "@appTitle": {
+    "description": "The application name shown in the app bar and launcher."
+  }
+}
